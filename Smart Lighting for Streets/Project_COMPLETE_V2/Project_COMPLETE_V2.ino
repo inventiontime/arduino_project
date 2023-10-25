@@ -1,6 +1,3 @@
-
-// PWM: 3, 5, 6, 9, 10, 11
-
 ////////////////////////////////////////////////   Pins   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const int rxPins[5] = {A4, A3, A2, A1, A0};
 const int lightPin[6] = {3, 5, 6, 9, 10, 13};
@@ -8,16 +5,15 @@ const int ldrPin = A5;
 const int trafficPins[3] = {12, 8, 4};
 
 ////////////////////////////////////////////////   Boolean   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-boolean prevR[5];
 boolean r[5];
-boolean delayA = false;
+boolean delayA = true;
 
 ////////////////////////////////////////////////   Integer   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int valIR = 0;
 int ldrState;
 int ldrThreshold = 150;
 long prevMillisT;
-long prevMillisP[5];
+long prevMillisD[5];
 int trafficState = 1;
 
 ////////////////////////////////////////////////   AppInterface   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +21,7 @@ byte info[7];
 boolean trafficOn = true;
 int trafficD[3] = {1, 1, 1};
 int lightD = 0;
-int lightI = 0;
+int lightI = 55;
 int irThreshold;
 
 ////////////////////////////////////////////////   Setup   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,9 +29,9 @@ void setup() {
   // to set pinmodes
   for(int i = 0; i < 6; i++){
     pinMode(rxPins[i], INPUT);
+    pinMode(lightPin[i], OUTPUT);
   }
   pinMode(ldrPin, INPUT);
-  pinMode(lightPin, OUTPUT);
   pinMode(trafficPins[0], OUTPUT);
   pinMode(trafficPins[1], OUTPUT);
   pinMode(trafficPins[2], OUTPUT);
@@ -47,7 +43,7 @@ void setup() {
   // for timing
   prevMillisT = millis();
   for(int i = 0; i < 5; i++){
-    prevMillisP[i] = millis();
+    prevMillisD[i] = millis();
   }
 }
 
@@ -66,23 +62,23 @@ void trafficL() {
       switch(trafficState){
         case 0:
           trafficState++;
-          digitalWrite(trafficPins[2], HIGH);
+          digitalWrite(trafficPins[1], HIGH);
           digitalWrite(trafficPins[0], LOW);
           digitalWrite(trafficPins[2], LOW);
           break;
 
         case 1:
           trafficState++;
-          digitalWrite(trafficPins[2], HIGH);
-          digitalWrite(trafficPins[0], LOW);
+          digitalWrite(trafficPins[0], HIGH);
+          digitalWrite(trafficPins[2], LOW);
           digitalWrite(trafficPins[1], LOW);
           break;
 
         case 2:
           trafficState = 0;
-          digitalWrite(trafficPins[0], HIGH);
+          digitalWrite(trafficPins[2], HIGH);
           digitalWrite(trafficPins[1], LOW);
-          digitalWrite(trafficPins[2], LOW);
+          digitalWrite(trafficPins[0], LOW);
           break;
       }
       prevMillisT = millis();
@@ -106,24 +102,21 @@ void streetL() {
     }
     
     for(int i = 0; i < 6; i++){
+      // to make delay work
+      if(millis() > prevMillisD[i] + (lightD * 500)){
+        r[i] = false;
+      }
+      
       // to sense obstruction and give output
       valIR = analogRead(rxPins[i]);
       if(valIR < irThreshold){
         analogWrite(lightPin[i], 255);
+        analogWrite(lightPin[i + 1], 255);
+        r[i] = true;
+        prevMillisD[i] = millis();
+      }else if(r[i]){
         analogWrite(lightPin[i], 255);
-        prevR[i] = r[i];
-        r[i] = HIGH;
-      }
-    
-      // to give delay for pedestrians
-      if(prevR[i] == HIGH && r[i] == LOW && delayA == true){
-        analogWrite(lightPin, 255);
-        delay(lightD);
-      }
-
-      // to start timer for piezo
-      if(prevR[i] == LOW && r[i] == HIGH){
-        prevMillisP[i] = millis();
+        analogWrite(lightPin[i + 1], 255);
       }
     }
   }else{

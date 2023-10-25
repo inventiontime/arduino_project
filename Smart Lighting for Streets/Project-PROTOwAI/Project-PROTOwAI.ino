@@ -1,10 +1,8 @@
 ////////////////////////////////////////////////   Pins   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const int txPin = 2;
-const int rxPin = A0;
+const int rxPin = A3;
 const int lightPin = 3;
-const int piezoPin = 11;
 const int ldrPin = 4;
-const int trafficPin[3] = {13, 12, 8};
+const int trafficPin[3] = {12, 8, 4};
 
 ////////////////////////////////////////////////   Boolean   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 boolean prevR = LOW;
@@ -30,10 +28,8 @@ int irThreshold;
 void setup() {
   // to set pinmodes
   pinMode(rxPin, INPUT);
-  pinMode(txPin, OUTPUT);
   pinMode(ldrPin, INPUT);
   pinMode(lightPin, OUTPUT);
-  pinMode(piezoPin, OUTPUT);
   pinMode(trafficPin[0], OUTPUT);
   pinMode(trafficPin[1], OUTPUT);
   pinMode(trafficPin[2], OUTPUT);
@@ -58,7 +54,7 @@ void loop() {
 ////////////////////////////////////////////////   trafficL   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void trafficL() {
   if(trafficOn){
-    if(millis() > prevMillisT + trafficD){
+    if(millis() > prevMillisT + (trafficD[trafficState] * 1000)){
       switch(trafficState){
         case 0:
           trafficState++;
@@ -83,18 +79,23 @@ void trafficL() {
       }
       prevMillisT = millis();
     }
+  }else{
+    digitalWrite(trafficPin[0], LOW);
+    digitalWrite(trafficPin[1], LOW);
+    digitalWrite(trafficPin[2], LOW);
   }
 }
 
 ////////////////////////////////////////////////   streetL   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void streetL() {
   // power saving with ldr
-  ldrState = digitalRead(ldrPin);
+  
+    ldrState = true;
   if(ldrState){
     // to sense obstruction and give output
     valIR = analogRead(rxPin);
     if(valIR < irThreshold){
-      analogWrite(lightPin, 20); // 20 to be changed to 255
+      analogWrite(lightPin, 255);
       prevR = r;
       r = HIGH;
     }else{
@@ -105,22 +106,22 @@ void streetL() {
     }
   
     // to give delay for pedestrians
-    if(prevR == HIGH && r == LOW && delayA == true){
+    if(prevR == HIGH && r == LOW){
       analogWrite(lightPin, 20);
       delay(lightD);
     }
 
-    // to start timer for piezo
-    if(prevR == LOW && r == HIGH && delayA == true){
-      prevMillisP = millis();
-    }
+    // // to start timer for piezo
+    // if(prevR == LOW && r == HIGH){
+    //   prevMillisP = millis();
+    // }
 
-    // to start piezo
-    if(millis() - prevMillisP > 10000){
-      digitalWrite(piezoPin, HIGH);
-    }else{
-      digitalWrite(piezoPin, LOW);
-    }
+    // // to start piezo
+    // if((millis() - prevMillisP) > 10000 && r == HIGH){
+    //   digitalWrite(piezoPin, HIGH);
+    // }else{
+    //   digitalWrite(piezoPin, LOW);
+    // }
     
   }else{
     analogWrite(lightPin, 0);

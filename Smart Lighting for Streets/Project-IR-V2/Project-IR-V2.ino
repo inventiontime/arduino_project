@@ -5,7 +5,7 @@ boolean prevR = LOW;
 boolean r = LOW;
 boolean delayA = false;
 int val = 0;
-int threshVal = 35;
+int threshVal = 40;
 int delayT = 2000;
 
 void setup() {

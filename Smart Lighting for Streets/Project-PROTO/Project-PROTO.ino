@@ -1,9 +1,8 @@
 ////////////////////////////////////////////////   Pins   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const int txPin = 2;
-const int rxPin = A0;
-const int lightPin = 3;
+const int rxPin = A3;
+const int lightPin = 6;
 const int piezoPin = 11;
-const int ldrPin = A4;    // to be changed after LM358 arrives to pin 4
 const int potPin = A5;
 const int trafficPin[3] = {13, 12, 8};
 
@@ -13,7 +12,7 @@ boolean r = LOW;
 boolean delayA = false;
 
 ////////////////////////////////////////////////   Integer   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const int threshVal = 35;
+const int threshVal = 23;
 const int delayT = 2000;
 int valIR = 0;
 int valPot = 0;
@@ -36,15 +35,11 @@ void setup() {
 ////////////////////////////////////////////////   Loop   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
   // put your main code here, to run repeatedly:
-  
-  // to set light brightness with pot value,
-  valPot = analogRead(potPin);
-  lightDim = map(valPot, 1, 1024, 1, 255);
 
   // to sense obstruction and give output
   valIR = analogRead(rxPin);
   if(valIR < threshVal){
-    analogWrite(lightPin, 20); // 20 to be changed to 255
+    analogWrite(lightPin, 255); // 20 to be changed to 255
     prevR = r;
     r = HIGH;
     Serial.println(LOW);
@@ -53,13 +48,6 @@ void loop() {
     prevR = r;
     r = LOW;
     Serial.println(HIGH);
-  }
-
-  // to give delay for pedestrians
-  if(prevR == HIGH && r == LOW){
-    analogWrite(lightPin, 20);
-    if(delayA)
-      delay(delayT);
   }
 }
 
